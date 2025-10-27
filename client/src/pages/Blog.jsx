@@ -164,8 +164,11 @@ const Blog = () => {
                           <p className="font-semibold text-gray-900 group-hover:text-primary transition-colors">
                             {item.name}
                           </p>
-                          <span className="text-xs text-gray-500">
-                            {Moment(item.time).fromNow()}
+                          <span
+                            className="text-xs text-gray-500"
+                            title={Moment(item.createdAt).format("MMMM Do YYYY, h:mm A")}
+                          >
+                            {Moment(item.createdAt).fromNow()}
                           </span>
                         </div>
                         <p className="text-gray-700 leading-relaxed">
