@@ -12,14 +12,14 @@ const BlogList = () => {
       : blog_data.filter((blog) => blog.category === menu);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 cursor cursor-pointer">
+    <div className="max-w-6xl mx-auto px-4">
       {/* Category Buttons */}
-      <div className="flex justify-center flex-wrap gap-4 my-12 ">
+      <div className="flex justify-center flex-wrap gap-4 my-12">
         {blogCategories.map((item) => (
           <button
             key={item}
             onClick={() => setMenu(item)}
-            className="relative px-4 py-2 rounded-full text-black transition-colors overflow-hidden"
+            className="relative px-4 py-2 rounded-full text-black transition-colors overflow-hidden cursor-pointer"
           >
             {menu === item && (
               <motion.span
@@ -32,7 +32,11 @@ const BlogList = () => {
                 }}
               />
             )}
-            <span className={`relative z-10 ${menu === item ? "text-white" : "text-black"}`}>
+            <span
+              className={`relative z-10 ${
+                menu === item ? "text-white" : "text-black"
+              }`}
+            >
               {item}
             </span>
           </button>
