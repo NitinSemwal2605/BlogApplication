@@ -1,17 +1,11 @@
-/*
- * Copyright (c) 2025 Yash Kushwaha
- * Licensed under the MIT License. See LICENSE file for details.
- */
-
 import React, { useEffect, useState } from 'react'
 import { assets, comments_data } from '../../assets/assets'
 
 const Comments = () => {
   const [comments, setComments] = useState([])
-  const [filter, setFilter] = useState('approved') // 'approved' | 'notApproved'
+  const [filter, setFilter] = useState('approved') // 'approved' or 'notApproved'
 
   useEffect(() => {
-    // Load from assets
     setComments(comments_data)
   }, [])
 
@@ -35,7 +29,6 @@ const Comments = () => {
         >
           Approved
         </button>
-
         <button
           className={`px-4 py-2 rounded-full border text-sm transition-all ${
             filter === 'notApproved'
@@ -62,7 +55,7 @@ const Comments = () => {
           </thead>
 
           <tbody>
-            {filteredComments && filteredComments.length > 0 ? (
+            {filteredComments.length > 0 ? (
               filteredComments.map((comment) => (
                 <tr
                   key={comment._id}
@@ -71,15 +64,15 @@ const Comments = () => {
                   <td className="px-4 py-4">
                     <p className="text-gray-800">
                       <span className="font-semibold">Blog:</span>{' '}
-                      {comment.blogTitle}
+                      {comment.blog?.title || 'No Title'}
                     </p>
                     <p className="text-gray-700 mt-1">
                       <span className="font-semibold">Name:</span>{' '}
-                      {comment.userName}
+                      {comment.name}
                     </p>
                     <p className="text-gray-700 mt-1">
                       <span className="font-semibold">Comment:</span>{' '}
-                      {comment.text}
+                      {comment.content}
                     </p>
                   </td>
 
@@ -101,9 +94,9 @@ const Comments = () => {
 
                       <button className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-red-50">
                         <img
-                          src={assets.trash_icon}
+                          src={assets.cross_icon}
                           alt="Delete"
-                          className="w-4 h-4"
+                          className="w-4 h-4 cursor cursor-pointer"
                         />
                       </button>
                     </div>
