@@ -29,7 +29,7 @@ const Dashboard = () => {
   }, [])
 
   return (
-    <div className="flex-1 p-4 md:p-10 bg-blue-50/50 min-h-screen">
+    <div className="flex-1 p-4 md:p-10 min-h-screen">
       {/* Top Summary Boxes */}
       <div className="flex flex-wrap gap-4">
         <div className="flex items-center bg-white gap-4 p-4 min-w-56 rounded shadow">

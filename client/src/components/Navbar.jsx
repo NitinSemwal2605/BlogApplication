@@ -1,9 +1,10 @@
 import React from "react";
 import { assets } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
+import { useAppContext } from "../context/AppContext";
 
 const Navbar = () => {
-  const navigate = useNavigate();
+  const {navigate, token} = useAppContext();
 
   return (
     <nav className="w-full ">
@@ -25,7 +26,7 @@ const Navbar = () => {
           transition-all duration-300 border border-black"
           onClick={() => navigate("/admin")}
         >
-          <span>Login</span>
+          <span>{token ? "Dashboard" : "Login"}</span>
           <img
             src={assets.arrow}
             alt="arrow"
