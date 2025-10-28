@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import Sidebar from '../../components/admin/Sidebar';
-import { assets } from '../../assets/assets';
-import { HiMenu, HiX } from 'react-icons/hi';
+import React, { useState } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import Sidebar from "../../components/admin/Sidebar";
+import { assets } from "../../assets/assets";
+import { HiMenu, HiX } from "react-icons/hi";
 
 const Layout = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const logout = () => {
-    localStorage.removeItem('adminToken');
-    navigate('/');
+    localStorage.removeItem("adminToken");
+    navigate("/");
   };
 
   return (
@@ -27,7 +27,7 @@ const Layout = () => {
             {sidebarOpen ? <HiX size={24} /> : <HiMenu size={24} />}
           </button>
           <img
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="w-32 sm:w-40 cursor-pointer"
             src={assets.logo}
             alt="Logo"
@@ -46,7 +46,9 @@ const Layout = () => {
         {/* Sidebar */}
         <aside
           className={`fixed top-[70px] left-0 h-[calc(100vh-70px)] w-64 bg-white border-r border-gray-200 overflow-y-auto transform transition-transform duration-300 ease-in-out z-40
-            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} sm:translate-x-0 sm:static sm:h-auto`}
+            ${
+              sidebarOpen ? "translate-x-0" : "-translate-x-full"
+            } sm:translate-x-0 sm:static sm:h-auto`}
         >
           <Sidebar />
         </aside>
@@ -61,11 +63,10 @@ const Layout = () => {
 
         {/* Main Content Area */}
         <main className="flex-1 p-6 md:p-10 overflow-y-auto h-[calc(100vh-70px)] bg-gray-50 sm:pl-64">
-  <div className="max-w-7xl mx-auto">
-    <Outlet />
-  </div>
-</main>
-
+          <div className="max-w-7xl mx-auto">
+            <Outlet />
+          </div>
+        </main>
       </div>
     </div>
   );
