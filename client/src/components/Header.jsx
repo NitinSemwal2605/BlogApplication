@@ -1,7 +1,26 @@
-import React from "react";
+import React, { useRef } from "react";
 import { assets } from "../assets/assets";
+import { useAppContext } from "../context/AppContext";
 
 const Header = () => {
+  const { setInput, input } = useAppContext();
+  const inputRef = useRef();
+
+  // Handle form submission (when pressing "Enter" or clicking Search)
+  const onSubmitHandler = (e) => {
+    e.preventDefault();
+    const value = inputRef.current.value.trim();
+    setInput(value);
+  };
+
+  // Clear search and input field
+  const onClear = () => {
+    setInput("");
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+  };
+
   return (
     <section className="relative text-center py-20 px-6 sm:px-16 xl:px-24 overflow-hidden">
       {/* Background gradient image */}
@@ -12,7 +31,7 @@ const Header = () => {
       />
 
       {/* Notification Bar */}
-      <div className="inline-flex items-center gap-3 px-6 py-2 mb-8 border border-primary/40 bg-primary/10 rounded-full text-sm font-medium text-primary shadow-sm hover:bg-primary/20 transition">
+      <div className="inline-flex items-center justify-center gap-3 px-6 py-2 mb-8 border border-primary/40 bg-primary/10 rounded-full text-sm font-medium text-primary shadow-sm hover:bg-primary/20 transition">
         <img src={assets.star_icon} alt="Star icon" className="w-4 h-4" />
         <span>New: AI Feature Integrated</span>
       </div>
@@ -32,10 +51,15 @@ const Header = () => {
       </p>
 
       {/* Search Bar */}
-      <form className="mt-8 flex items-center justify-center gap-2">
+      <form
+        onSubmit={onSubmitHandler}
+        className="mt-8 flex items-center justify-center gap-2"
+      >
         <input
+          ref={inputRef}
           type="text"
           placeholder="Search blogs..."
+          defaultValue={input}
           className="w-64 sm:w-80 px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:border-primary transition"
           aria-label="Search blogs"
           required
@@ -47,6 +71,18 @@ const Header = () => {
           Search
         </button>
       </form>
+
+      {/* Clear Button */}
+      {input && (
+        <div className="mt-4">
+          <button
+            onClick={onClear}
+            className="border border-gray-300 font-light text-xs py-1 px-3 rounded shadow-sm hover:bg-gray-50 transition cursor-pointer"
+          >
+            Clear Search
+          </button>
+        </div>
+      )}
     </section>
   );
 };
