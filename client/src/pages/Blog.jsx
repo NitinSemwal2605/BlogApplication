@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { assets, blog_data, comments_data } from "../assets/assets";
+import { assets } from "../assets/assets";
 import Navbar from "../components/Navbar";
 import Moment from "moment";
 import { useParams } from "react-router-dom";
@@ -9,38 +9,97 @@ import {
   FaLinkedinIn,
   FaWhatsapp,
 } from "react-icons/fa6";
+import { useAppContext } from "../context/AppContext";
+import toast from "react-hot-toast";
 
 const Blog = () => {
   const { id } = useParams();
+  const { axios } = useAppContext();
+
   const [data, setData] = useState(null);
   const [comments, setComments] = useState([]);
+  const [commentForm, setCommentForm] = useState({ name: "", content: "" });
 
-  // Fetch blog
-  const fetchBlogData = () => {
-    const foundData = blog_data.find((item) => item._id === id);
-    setData(foundData);
+  // ✅ Fetch blog by ID
+  const fetchBlogData = async () => {
+    try {
+      const { data } = await axios.get(`/api/blog/${id}`);
+      if (data.success) {
+        setData(data.blog);
+      } else {
+        toast.error("Failed to load blog");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error fetching blog data");
+    }
+  };
+
+  // ✅ Fetch comments
+  const fetchComments = async () => {
+    try {
+      const { data } = await axios.post(`/api/blog/comments`, { blogId: id });
+      if (data.success) {
+        setComments(data.comments);
+      } else {
+        setComments([]);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load comments");
+    }
+  };
+
+  // ✅ Add comment
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!commentForm.name.trim() || !commentForm.content.trim()) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    try {
+      const { data } = await axios.post(`/api/blog/add-comment`, {
+        blogId: id,
+        name: commentForm.name,
+        content: commentForm.content,
+      });
+
+      if (data.success) {
+        toast.success("Comment added!");
+        setCommentForm({ name: "", content: "" });
+        fetchComments();
+      } else {
+        toast.error("Failed to add comment");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error submitting comment");
+    }
   };
 
   useEffect(() => {
     fetchBlogData();
+    fetchComments();
   }, [id]);
 
-  // Fetch comments
-  const fetchComments = () => {
-    setComments(comments_data);
-  };
+  // ✅ Loading State
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center h-screen text-gray-500 text-lg">
+        Loading...
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    fetchComments();
-  }, []);
-
-  return data ? (
+  return (
     <div className="relative min-h-screen bg-white text-gray-700">
       {/* Background */}
       <img
         className="absolute top-0 left-0 w-full h-full -z-10 opacity-30 object-cover"
         src={assets.gradientBackground}
-        alt=""
+        alt="background"
       />
 
       <Navbar />
@@ -62,7 +121,7 @@ const Blog = () => {
         </h2>
 
         <p className="inline-block py-1 px-4 rounded-full mb-10 border text-sm border-primary/40 bg-primary/5 font-medium text-primary">
-          By Nitin Semwal
+          By {data.author || "Admin"}
         </p>
 
         {/* Blog Content */}
@@ -78,7 +137,7 @@ const Blog = () => {
             dangerouslySetInnerHTML={{ __html: data.description }}
           ></div>
 
-          {/* --- Share This Article Section --- */}
+          {/* --- Share Section --- */}
           <div className="mt-10 mb-16 text-center">
             <h3 className="text-2xl font-bold text-gray-900 mb-3">
               Share this article 📢
@@ -137,16 +196,14 @@ const Blog = () => {
           {/* --- Comments Section --- */}
           <div className="mt-20 mb-16">
             <div className="max-w-3xl mx-auto text-center">
-              {/* Comments Header */}
-              <div className="flex flex-col items-center mb-10">
-                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
-                  Comments <span className="text-primary">({comments.length})</span>
-                </h3>
-                <div className="w-24 h-[3px] bg-primary/60 mt-3 rounded-full"></div>
-              </div>
+              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+                Comments{" "}
+                <span className="text-primary">({comments.length})</span>
+              </h3>
+              <div className="w-24 h-[3px] bg-primary/60 mt-3 rounded-full mx-auto"></div>
 
               {/* Comments List */}
-              <div className="space-y-6 mb-12 text-left">
+              <div className="space-y-6 mb-12 mt-10 text-left">
                 {comments.length > 0 ? (
                   comments.map((item, index) => (
                     <div
@@ -166,7 +223,9 @@ const Blog = () => {
                           </p>
                           <span
                             className="text-xs text-gray-500"
-                            title={Moment(item.createdAt).format("MMMM Do YYYY, h:mm A")}
+                            title={Moment(item.createdAt).format(
+                              "MMMM Do YYYY, h:mm A"
+                            )}
                           >
                             {Moment(item.createdAt).fromNow()}
                           </span>
@@ -191,21 +250,37 @@ const Blog = () => {
                 </h4>
 
                 <form
-                  onSubmit={(e) => e.preventDefault()}
+                  onSubmit={handleCommentSubmit}
                   className="flex flex-col gap-5 bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-sm mx-auto max-w-2xl"
                 >
                   <div className="flex flex-col sm:flex-row gap-4">
                     <input
                       type="text"
                       placeholder="Your Name"
+                      value={commentForm.name}
+                      onChange={(e) =>
+                        setCommentForm({
+                          ...commentForm,
+                          name: e.target.value,
+                        })
+                      }
                       className="flex-1 border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition placeholder:text-gray-400"
                     />
                   </div>
+
                   <textarea
                     placeholder="Write your comment..."
                     rows="4"
+                    value={commentForm.content}
+                    onChange={(e) =>
+                      setCommentForm({
+                        ...commentForm,
+                        content: e.target.value,
+                      })
+                    }
                     className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 resize-none transition placeholder:text-gray-400"
                   ></textarea>
+
                   <button
                     type="submit"
                     className="self-center bg-primary text-white px-8 py-2.5 rounded-md font-medium hover:bg-primary/90 active:scale-[0.98] transition-all"
@@ -216,13 +291,8 @@ const Blog = () => {
               </div>
             </div>
           </div>
-          {/* --- End Comments Section --- */}
         </div>
       </div>
-    </div>
-  ) : (
-    <div className="flex items-center justify-center h-screen text-gray-500 text-lg">
-      Loading...
     </div>
   );
 };
