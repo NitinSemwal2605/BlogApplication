@@ -1,6 +1,6 @@
-import express from 'express'
-import upload from '../middlewares/multer.js'
-import auth from '../middlewares/auth.js'
+import express from 'express';
+import upload from '../middlewares/multer.js';
+import auth from '../middlewares/auth.js';
 import {
   addBlog,
   getAllBlogs,
@@ -9,32 +9,44 @@ import {
   togglePublish,
   addComment,
   getBlogComments
-} from '../controllers/blogController.js'
+} from '../controllers/blogController.js';
 
-const blogRouter = express.Router()
+const blogRouter = express.Router();
+
+// ✅ Middleware to set CORS headers (fixes Vercel issue)
+blogRouter.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://quickblog-fubvb32ex-nitin-semwals-projects.vercel.app");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204); // Preflight request
+  }
+  next();
+});
 
 // 🟢 BLOG MANAGEMENT ROUTES
+
 // Admin adds blog (protected)
-blogRouter.post('/add', upload.single('image'), auth, addBlog)
+blogRouter.post('/add', upload.single('image'), auth, addBlog);
 
 // Public — Get all published blogs
-blogRouter.get('/all', getAllBlogs)
+blogRouter.get('/all', getAllBlogs);
 
 // Public — Get single blog by ID
-blogRouter.get('/:blogId', getBlogById)
+blogRouter.get('/:blogId', getBlogById);
 
 // Admin — Delete blog (also deletes its comments)
-blogRouter.delete('/:id', auth, deleteBlogById)
+blogRouter.delete('/:id', auth, deleteBlogById);
 
 // Admin — Toggle publish status
-blogRouter.patch('/status/:id', auth, togglePublish)
-
+blogRouter.patch('/status/:id', auth, togglePublish);
 
 // 🟢 COMMENT ROUTES
+
 // Public — Add comment to a specific blog
-blogRouter.post('/add-comment', addComment)
+blogRouter.post('/add-comment', addComment);
 
 // Public — Get approved comments of a specific blog
-blogRouter.get('/:blogId/comments', getBlogComments)
+blogRouter.get('/:blogId/comments', getBlogComments);
 
-export default blogRouter
+export default blogRouter;
