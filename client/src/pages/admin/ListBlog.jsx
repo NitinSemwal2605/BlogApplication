@@ -4,14 +4,91 @@
  */
 
 import React, { useEffect, useState } from 'react'
-import { assets, dashboard_data } from '../../assets/assets'
+import { assets } from '../../assets/assets'
+import toast from 'react-hot-toast'
+import { useAppContext } from '../../context/AppContext'
 
 const BlogList = () => {
+  const { axios } = useAppContext()
   const [blogs, setBlogs] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  // 🟢 Fetch blogs from backend
+  const fetchBlogs = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('token')
+
+      const response = await axios.get('/api/blog/all', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (response.data.success) {
+        setBlogs(response.data.blogs)
+      } else {
+        toast.error(response.data.message || 'Failed to load blogs')
+      }
+    } catch (error) {
+      console.error('Error fetching blogs:', error)
+      toast.error('Error fetching blogs')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 🟢 Toggle publish/unpublish
+  const togglePublishStatus = async (id, currentStatus) => {
+    try {
+      const token = localStorage.getItem('token')
+
+      const response = await axios.patch(
+        `/api/blog/status/${id}`,
+        { isPublished: !currentStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      if (response.data.success) {
+        toast.success(
+          `Blog ${!currentStatus ? 'published' : 'unpublished'} successfully!`
+        )
+        fetchBlogs() // Refresh list
+      } else {
+        toast.error(response.data.message || 'Failed to update blog')
+      }
+    } catch (error) {
+      console.error('Error updating status:', error)
+      toast.error('Error updating blog status')
+    }
+  }
+
+  // 🟢 Delete blog
+  const deleteBlog = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this blog?')) return
+
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.delete(`/api/blog/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (response.data.success) {
+        toast.success('Blog deleted successfully!')
+        fetchBlogs()
+      } else {
+        toast.error(response.data.message || 'Failed to delete blog')
+      }
+    } catch (error) {
+      console.error('Error deleting blog:', error)
+      toast.error('Error deleting blog')
+    }
+  }
 
   useEffect(() => {
-    // Load local data from assets
-    setBlogs(dashboard_data.recentBlogs)
+    fetchBlogs()
   }, [])
 
   return (
@@ -31,7 +108,16 @@ const BlogList = () => {
           </thead>
 
           <tbody>
-            {blogs && blogs.length > 0 ? (
+            {loading ? (
+              <tr>
+                <td
+                  colSpan="5"
+                  className="text-center py-6 text-gray-400 text-sm"
+                >
+                  Loading blogs...
+                </td>
+              </tr>
+            ) : blogs.length > 0 ? (
               blogs.map((blog, index) => {
                 const blogDate = new Date(blog.createdAt)
                 return (
@@ -49,9 +135,7 @@ const BlogList = () => {
                     <td className="px-4 py-4">
                       <span
                         className={`font-medium ${
-                          blog.isPublished
-                            ? 'text-green-600'
-                            : 'text-red-500'
+                          blog.isPublished ? 'text-green-600' : 'text-red-500'
                         }`}
                       >
                         {blog.isPublished ? 'Published' : 'Unpublished'}
@@ -59,17 +143,23 @@ const BlogList = () => {
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        {blog.isPublished ? (
-                          <button className="px-3 py-1 border border-gray-300 text-gray-700 text-xs rounded hover:bg-gray-100">
-                            Unpublish
-                          </button>
-                        ) : (
-                          <button className="px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600">
-                            Publish
-                          </button>
-                        )}
+                        <button
+                          onClick={() =>
+                            togglePublishStatus(blog._id, blog.isPublished)
+                          }
+                          className={`px-3 py-1 text-xs rounded cursor cursor-pointer ${
+                            blog.isPublished
+                              ? 'border border-gray-300 text-gray-700 hover:bg-gray-100'
+                              : 'bg-green-500 text-white hover:bg-green-600'
+                          }`}
+                        >
+                          {blog.isPublished ? 'Unpublish' : 'Publish'}
+                        </button>
 
-                        <button className="flex items-center justify-center w-6 h-6 rounded-full bg-red-50 hover:bg-red-100">
+                        <button
+                          onClick={() => deleteBlog(blog._id)}
+                          className="flex items-center justify-center w-6 h-6 rounded-full bg-red-50 hover:bg-red-100"
+                        >
                           <img
                             src={assets.cross_icon}
                             alt="Delete"

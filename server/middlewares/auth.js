@@ -1,14 +1,24 @@
-import jwt from 'jsonwebtoken'
+import jwt from 'jsonwebtoken';
 
 const auth = (req, res, next) => {
-    const token = req.headers.authorization
+  try {
+    const authHeader = req.headers.authorization;
 
-    try {
-        jwt.verify(token, process.env.JWT_SECRET)
-        next()
-    } catch (error) {
-        res.json({success: false, message: "Invalid Token"})
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ success: false, message: "No token provided" });
     }
-}
 
-export default auth
+    // Extract the actual token after "Bearer "
+    const token = authHeader.split(" ")[1];
+
+    // Verify the token
+    jwt.verify(token, process.env.JWT_SECRET);
+
+    next();
+  } catch (error) {
+    console.error("JWT Verification Error:", error.message);
+    res.status(401).json({ success: false, message: "Invalid Token" });
+  }
+};
+
+export default auth;

@@ -3,48 +3,107 @@
  * Licensed under the MIT License. See LICENSE file for details.
  */
 
-import React, { useEffect, useRef, useState } from 'react'
-import { assets, blogCategories } from '../../assets/assets'
-import Quill from 'quill'
-import 'quill/dist/quill.snow.css' // important for editor styling
-import toast from 'react-hot-toast'
+import React, { useEffect, useRef, useState } from "react";
+import { assets, blogCategories } from "../../assets/assets";
+import Quill from "quill";
+import "quill/dist/quill.snow.css"; // important for editor styling
+import toast from "react-hot-toast";
+import { useAppContext } from "../../context/AppContext";
 
 const AddBlog = () => {
-  const [isAdding, setIsAdding] = useState(false)
-  const [image, setImage] = useState(null)
-  const [title, setTitle] = useState('')
-  const [subTitle, setSubTitle] = useState('')
-  const [category, setCategory] = useState('Startup')
-  const [isPublished, setIsPublished] = useState(false)
+  const { axios } = useAppContext();
+  const [isAdding, setIsAdding] = useState(false);
+  const [image, setImage] = useState(null);
+  const [title, setTitle] = useState("");
+  const [subTitle, setSubTitle] = useState("");
+  const [category, setCategory] = useState("Startup");
+  const [isPublished, setIsPublished] = useState(false);
 
-  const editorRef = useRef(null)
-  const quillRef = useRef(null)
+  const editorRef = useRef(null);
+  const quillRef = useRef(null);
 
   const generateContent = async () => {
-    toast('AI content generation coming soon!', { icon: '✨' })
-  }
+    toast("AI content generation coming soon!", { icon: "✨" });
+  };
 
   const onSubmitHandler = async (e) => {
-    e.preventDefault()
-  }
+    e.preventDefault();
+    console.log("Submit clicked");
+
+    if (!image) {
+      toast.error("Please upload an image before submitting.");
+      return;
+    }
+
+    setIsAdding(true);
+
+    try {
+      const blog = {
+        title,
+        subTitle,
+        description: quillRef.current.root.innerHTML,
+        category,
+        isPublished,
+      };
+
+      const formData = new FormData();
+      formData.append("image", image);
+      formData.append("blog", JSON.stringify(blog));
+
+      // Debug log formData content
+      console.log("FormData content:");
+      for (let pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
+
+      const token = localStorage.getItem("token");
+
+      const response = await axios.post("/api/blog/add", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("Response:", response);
+
+      if (response.status === 201 || response.status === 200) {
+        toast.success("Blog added successfully!");
+        // Reset form
+        setImage(null);
+        setTitle("");
+        setSubTitle("");
+        setCategory("Startup");
+        setIsPublished(false);
+        quillRef.current.root.innerHTML = "";
+      } else {
+        toast.error(`Unexpected response status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Axios post error:", error);
+      toast.error("Error adding blog!");
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   useEffect(() => {
     if (!quillRef.current && editorRef.current) {
       quillRef.current = new Quill(editorRef.current, {
-        theme: 'snow',
-        placeholder: 'Write your blog content here...',
+        theme: "snow",
+        placeholder: "Write your blog content here...",
         modules: {
           toolbar: [
             [{ header: [1, 2, 3, false] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ list: 'ordered' }, { list: 'bullet' }],
-            ['link', 'blockquote', 'code-block'],
-            ['clean'],
+            ["bold", "italic", "underline", "strike"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["link", "blockquote", "code-block"],
+            ["clean"],
           ],
         },
-      })
+      });
     }
-  }, [])
+  }, []);
 
   return (
     <div className="flex-1 text-gray-700 min-h-screen overflow-y-auto">
@@ -52,7 +111,9 @@ const AddBlog = () => {
         onSubmit={onSubmitHandler}
         className="max-w-3xl mx-auto bg-white shadow rounded-lg p-6 md:p-10 my-10"
       >
-        <h2 className="text-2xl font-semibold mb-6 text-gray-800">Add New Blog</h2>
+        <h2 className="text-2xl font-semibold mb-6 text-gray-800">
+          Add New Blog
+        </h2>
 
         {/* Thumbnail Upload */}
         <div className="mb-6">
@@ -152,15 +213,15 @@ const AddBlog = () => {
           type="submit"
           className={`w-full sm:w-40 h-10 rounded-md text-white text-sm transition ${
             isAdding
-              ? 'bg-indigo-300 cursor-not-allowed'
-              : 'bg-indigo-600 hover:bg-indigo-700'
+              ? "bg-indigo-300 cursor-not-allowed"
+              : "bg-indigo-600 hover:bg-indigo-700"
           }`}
         >
-          {isAdding ? 'Adding...' : 'Add Blog'}
+          {isAdding ? "Adding..." : "Add Blog"}
         </button>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default AddBlog
+export default AddBlog;

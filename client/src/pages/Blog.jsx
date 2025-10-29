@@ -37,18 +37,19 @@ const Blog = () => {
 
   // ✅ Fetch comments
   const fetchComments = async () => {
-    try {
-      const { data } = await axios.post(`/api/blog/comments`, { blogId: id });
-      if (data.success) {
-        setComments(data.comments);
-      } else {
-        setComments([]);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load comments");
+  try {
+    const { data } = await axios.get(`/api/blog/${id}/comments`);
+    if (data.success) {
+      setComments(data.comments);
+    } else {
+      setComments([]);
     }
-  };
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to load comments");
+  }
+};
+
 
   // ✅ Add comment
   const handleCommentSubmit = async (e) => {
