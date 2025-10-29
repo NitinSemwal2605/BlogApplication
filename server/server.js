@@ -1,5 +1,4 @@
 import express from "express";
-import "dotenv/config";
 import cors from "cors";
 import connectDB from "./config/db.js";
 import adminRouter from "./routes/adminRoutes.js";
@@ -7,10 +6,10 @@ import blogRouter from "./routes/blogRoutes.js";
 
 const app = express();
 
-// ✅ CORS setup
+// ✅ STEP 1: Setup CORS properly
 const allowedOrigins = [
-  "http://localhost:5173", // local frontend
-  "https://quickblog-fubvb32ex-nitin-semwals-projects.vercel.app" // deployed frontend
+  "https://quickblog-vert-nine.vercel.app", // your frontend
+  "http://localhost:5173"                   // for local testing (optional)
 ];
 
 app.use(
@@ -28,15 +27,14 @@ app.use(
   })
 );
 
+// ✅ STEP 2: Continue with app setup
 app.use(express.json());
 connectDB();
 
-// ✅ Routes
-app.get("/", (req, res) => res.send("✅ API is running!"));
+app.get("/", (req, res) => res.send("✅ API running successfully!"));
 app.use("/api/admin", adminRouter);
 app.use("/api/blog", blogRouter);
 
-// 404 fallback
 app.use((req, res) => res.status(404).json({ message: "Route not found" }));
 
 const PORT = process.env.PORT || 3000;
