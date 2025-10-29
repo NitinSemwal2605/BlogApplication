@@ -1,8 +1,4 @@
-/*
- * Copyright (c) 2025 Yash Kushwaha
- * Licensed under the MIT License. See LICENSE file for details.
- */
-
+// AddBlog.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { assets, blogCategories } from "../../assets/assets";
 import Quill from "quill";
@@ -23,7 +19,73 @@ const AddBlog = () => {
   const quillRef = useRef(null);
 
   const generateContent = async () => {
-    toast("AI content generation coming soon!", { icon: "✨" });
+    if (!title.trim() || !subTitle.trim()) {
+      toast.error("Please fill in both Title and Subtitle before generating content.");
+      return;
+    }
+
+    toast.loading("Generating content…", { id: "genContent" });
+
+    try {
+      // Prepare prompt for Gemini API
+      const promptText = `Write a well-structured blog article with the following:
+Title: "${title}"
+Subtitle: "${subTitle}"
+Use a strong introduction, multiple body sections with headings, and a clear conclusion. Use an engaging yet professional tone.`;
+
+      // Call Gemini API (example using REST fetch; adapt based on your SDK)
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+      const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+      const body = {
+  contents: [
+    {
+      parts: [
+        { text: promptText }
+      ]
+    }
+  ],
+  generationConfig: {
+    maxOutputTokens: 2000
+  },
+  systemInstruction: {
+    role: "system",
+    parts: [
+      { text: "You are a professional blog-writer AI. Output a blog article that is ready to be inserted." }
+    ]
+  }
+};
+
+
+      const resp = await fetch(endpoint + `?key=${apiKey}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!resp.ok) {
+        const errText = await resp.text();
+        throw new Error(`Gemini API error: ${resp.status} ${errText}`);
+      }
+
+      const data = await resp.json();
+      const generated = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!generated) {
+        throw new Error("No content returned from Gemini API");
+      }
+
+      // Insert into Quill editor
+      if (quillRef.current) {
+        quillRef.current.root.innerHTML = generated;
+      }
+
+      toast.success("Content generated!", { id: "genContent" });
+    } catch (error) {
+      console.error("Error generating content:", error);
+      toast.error("Failed to generate content.", { id: "genContent" });
+    }
   };
 
   const onSubmitHandler = async (e) => {
@@ -173,7 +235,7 @@ const AddBlog = () => {
           <button
             type="button"
             onClick={generateContent}
-            className="absolute bottom-2 right-2 text-xs bg-indigo-600 text-white px-4 py-1.5 cursor cursor-pointer rounded hover:bg-indigo-700 transition"
+            className="absolute bottom-2 right-2 text-xs bg-indigo-600 text-white px-4 py-1.5 cursor-pointer rounded hover:bg-indigo-700 transition"
           >
             Generate with AI
           </button>
