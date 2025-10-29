@@ -43,12 +43,14 @@ export const addBlog = async (req, res) => {
 // 🟢 Get All Blogs (only published)
 export const getAllBlogs = async (req, res) => {
   try {
-    const blogs = await Blog.find()
-    res.json({ success: true, blogs })
+    const blogs = await Blog.find({ isPublished: true }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, blogs });
   } catch (error) {
-    res.json({ success: false, message: error.message })
+    res.status(500).json({ success: false, message: "Server Error" });
   }
-}
+};
+
+
 
 // 🟢 Get Blog By ID
 export const getBlogById = async (req, res) => {
