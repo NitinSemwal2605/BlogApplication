@@ -13,16 +13,7 @@ import {
 
 const blogRouter = express.Router();
 
-// ✅ Middleware to set CORS headers (fixes Vercel issue)
-blogRouter.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://quickblog-fubvb32ex-nitin-semwals-projects.vercel.app");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204); // Preflight request
-  }
-  next();
-});
+
 
 // 🟢 BLOG MANAGEMENT ROUTES
 

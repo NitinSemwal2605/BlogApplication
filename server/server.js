@@ -7,16 +7,26 @@ import blogRouter from "./routes/blogRoutes.js";
 
 const app = express();
 
-// ✅ CORS setup should be first
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://quickblog-fubvb32ex-nitin-semwals-projects.vercel.app");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
-  next();
-});
+// ✅ CORS setup
+const allowedOrigins = [
+  "http://localhost:5173", // local frontend
+  "https://quickblog-fubvb32ex-nitin-semwals-projects.vercel.app" // deployed frontend
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
+  })
+);
 
 app.use(express.json());
 connectDB();
@@ -26,6 +36,7 @@ app.get("/", (req, res) => res.send("✅ API is running!"));
 app.use("/api/admin", adminRouter);
 app.use("/api/blog", blogRouter);
 
+// 404 fallback
 app.use((req, res) => res.status(404).json({ message: "Route not found" }));
 
 const PORT = process.env.PORT || 3000;
