@@ -18,6 +18,22 @@ const AddBlog = () => {
   const editorRef = useRef(null);
   const quillRef = useRef(null);
 
+  // Helper function to structure AI content
+  const structureGeneratedBlog = ({ title, subTitle, rawContent }) => {
+    const description = rawContent
+      .split(/\n{1,}/) // split on empty lines
+      .map((p) => `<p>${p.trim()}</p>`)
+      .join("");
+
+    return {
+      title,
+      subTitle,
+      author: "Admin",
+      image: "", // optional, user can upload separately
+      description,
+    };
+  };
+
   const generateContent = async () => {
     if (!title.trim() || !subTitle.trim()) {
       toast.error(
@@ -29,32 +45,27 @@ const AddBlog = () => {
     toast.loading("Generating content…", { id: "genContent" });
 
     try {
-      // Prepare prompt for Gemini API
       const promptText = `Write a well-structured blog article with the following:
-      Title: "${title}"
-      Subtitle: "${subTitle}"
-      Use a strong introduction, multiple body sections with headings, and a clear conclusion. Use an engaging yet professional tone.`;
+Title: "${title}"
+Subtitle: "${subTitle}"
+Use a strong introduction, multiple body sections with headings, and a clear conclusion. Use an engaging yet professional tone.`;
 
-      // Call Gemini API (example using REST fetch; adapt based on your SDK)
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-
       const endpoint =
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+
       const body = {
         contents: [
           {
             parts: [{ text: promptText }],
           },
         ],
-        generationConfig: {
-          maxOutputTokens: 2000,
-        },
+        generationConfig: { maxOutputTokens: 2000 },
         systemInstruction: {
           role: "system",
           parts: [
             {
-              text:
-                "You are a professional blog-writer AI. Output a blog article that is ready to be inserted.",
+              text: "You are a professional blog-writer AI. Output a blog article that is ready to be inserted.",
             },
           ],
         },
@@ -62,9 +73,7 @@ const AddBlog = () => {
 
       const resp = await fetch(endpoint + `?key=${apiKey}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
@@ -75,16 +84,21 @@ const AddBlog = () => {
 
       const data = await resp.json();
       const generated = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!generated) {
-        throw new Error("No content returned from Gemini API");
-      }
+      if (!generated) throw new Error("No content returned from Gemini API");
 
-      // Insert into Quill editor
+      // Structure the content
+      const structuredBlog = structureGeneratedBlog({
+        title,
+        subTitle,
+        rawContent: generated,
+      });
+
+      // Insert structured HTML into Quill editor
       if (quillRef.current) {
-        quillRef.current.root.innerHTML = generated;
+        quillRef.current.root.innerHTML = structuredBlog.description;
       }
 
-      toast.success("Content generated!", { id: "genContent" });
+      toast.success("Content generated and structured!", { id: "genContent" });
     } catch (error) {
       console.error("Error generating content:", error);
       toast.error("Failed to generate content.", { id: "genContent" });
@@ -93,7 +107,6 @@ const AddBlog = () => {
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
-    console.log("Submit clicked");
 
     if (!image) {
       toast.error("Please upload an image before submitting.");
@@ -115,12 +128,6 @@ const AddBlog = () => {
       formData.append("image", image);
       formData.append("blog", JSON.stringify(blog));
 
-      // Debug log formData content
-      console.log("FormData content:");
-      for (let pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
-      }
-
       const token = localStorage.getItem("token");
 
       const response = await axios.post("/api/blog/add", formData, {
@@ -130,11 +137,8 @@ const AddBlog = () => {
         },
       });
 
-      console.log("Response:", response);
-
       if (response.status === 201 || response.status === 200) {
         toast.success("Blog added successfully!");
-        // Reset form
         setImage(null);
         setTitle("");
         setSubTitle("");
