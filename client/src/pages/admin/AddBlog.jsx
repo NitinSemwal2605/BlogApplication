@@ -20,7 +20,9 @@ const AddBlog = () => {
 
   const generateContent = async () => {
     if (!title.trim() || !subTitle.trim()) {
-      toast.error("Please fill in both Title and Subtitle before generating content.");
+      toast.error(
+        "Please fill in both Title and Subtitle before generating content."
+      );
       return;
     }
 
@@ -29,40 +31,41 @@ const AddBlog = () => {
     try {
       // Prepare prompt for Gemini API
       const promptText = `Write a well-structured blog article with the following:
-Title: "${title}"
-Subtitle: "${subTitle}"
-Use a strong introduction, multiple body sections with headings, and a clear conclusion. Use an engaging yet professional tone.`;
+      Title: "${title}"
+      Subtitle: "${subTitle}"
+      Use a strong introduction, multiple body sections with headings, and a clear conclusion. Use an engaging yet professional tone.`;
 
       // Call Gemini API (example using REST fetch; adapt based on your SDK)
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-      const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+      const endpoint =
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
       const body = {
-  contents: [
-    {
-      parts: [
-        { text: promptText }
-      ]
-    }
-  ],
-  generationConfig: {
-    maxOutputTokens: 2000
-  },
-  systemInstruction: {
-    role: "system",
-    parts: [
-      { text: "You are a professional blog-writer AI. Output a blog article that is ready to be inserted." }
-    ]
-  }
-};
-
+        contents: [
+          {
+            parts: [{ text: promptText }],
+          },
+        ],
+        generationConfig: {
+          maxOutputTokens: 2000,
+        },
+        systemInstruction: {
+          role: "system",
+          parts: [
+            {
+              text:
+                "You are a professional blog-writer AI. Output a blog article that is ready to be inserted.",
+            },
+          ],
+        },
+      };
 
       const resp = await fetch(endpoint + `?key=${apiKey}`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
 
       if (!resp.ok) {
