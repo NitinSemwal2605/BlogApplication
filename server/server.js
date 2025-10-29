@@ -1,51 +1,74 @@
 import express from "express";
+import dotenv from "dotenv";
 import cors from "cors";
-import "dotenv/config";
-import connectDB from "./config/db.js";
-import adminRouter from "./routes/adminRoutes.js";
-import blogRouter from "./routes/blogRoutes.js";
+import mongoose from "mongoose";
 
+// 🟢 Load environment variables
+dotenv.config();
+
+// 🟢 Initialize express app
 const app = express();
-connectDB();
 
-// ✅ STEP 1: Define allowed origins
+// 🟢 Middleware
+app.use(express.json());
+
+// 🟢 CORS Configuration (Fix for your CORS issue)
 const allowedOrigins = [
-  "https://quickblog-vert-nine.vercel.app", // your frontend (prod)
-  "http://localhost:5173",                  // your frontend (dev)
+  "http://localhost:5173", // for local dev
+  "https://quickblog-vert-nine.vercel.app", // your frontend deployed
 ];
 
-// ✅ STEP 2: Enable CORS globally
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, Postman)
+      // Allow requests with no origin (like mobile apps or curl)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      } else {
-        return callback(new Error("Not allowed by CORS"));
-      }
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("CORS policy: This origin is not allowed."));
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+    ],
   })
 );
 
-// ✅ STEP 3: Handle preflight requests quickly
-app.options("*", cors());
+// 🟢 Basic route
+app.get("/", (req, res) => {
+  res.send("🚀 Blog Application Backend Running Successfully!");
+});
 
-// ✅ STEP 4: Middlewares and routes
-app.use(express.json());
-app.get("/", (req, res) => res.send("✅ Blog API is live!"));
-app.use("/api/admin", adminRouter);
+// 🟢 Import your routes
+import blogRouter from "./routes/blogRoutes.js";
+import adminRouter from "./routes/adminRoutes.js";
+
+// 🟢 Use routes
 app.use("/api/blog", blogRouter);
+app.use("/api/admin", adminRouter);
 
-// ✅ STEP 5: Catch-all 404
-app.use((req, res) => res.status(404).json({ message: "Route not found" }));
+// 🟢 Global error handler (to prevent server crash)
+app.use((err, req, res, next) => {
+  console.error("Error:", err.message);
+  if (err.message.includes("CORS")) {
+    return res.status(403).json({ success: false, message: err.message });
+  }
+  res.status(500).json({ success: false, message: "Server Error" });
+});
 
-// ✅ STEP 6: Local dev port (Vercel ignores this)
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// 🟢 Connect MongoDB
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB connected successfully"))
+  .catch((err) => console.error("❌ MongoDB connection failed:", err.message));
 
-export default app;
+// 🟢 Port Configuration
+const PORT = process.env.PORT || 5000;
+
+// 🟢 Start Server
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
