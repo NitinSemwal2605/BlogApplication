@@ -16,6 +16,7 @@ app.use(express.json());
 const allowedOrigins = [
   "http://localhost:5173", // for local dev
   "https://quickblog-vert-nine.vercel.app", // your frontend deployed
+  "https://blog-application-bvuec5all-nitin-semwals-projects.vercel.app",
 ];
 
 app.use(
@@ -61,7 +62,7 @@ app.use((err, req, res, next) => {
 
 // 🟢 Connect MongoDB
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGODB_URI)
   .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((err) => console.error("❌ MongoDB connection failed:", err.message));
 

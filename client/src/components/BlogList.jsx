@@ -26,6 +26,7 @@ const BlogList = () => {
         ];
         setCategories(uniqueCats);
       } else {
+        console.error("Failed to fetch blogs:", data.message);
         toast.error("Failed to fetch blogs");
       }
     } catch (err) {
