@@ -50,7 +50,7 @@ Title: "${title}"
 Subtitle: "${subTitle}"
 Use a strong introduction, multiple body sections with headings, and a clear conclusion. Use an engaging yet professional tone.`;
 
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const apiKey = import.meta.env.VITE_GEMINI_API;
       const endpoint =
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
